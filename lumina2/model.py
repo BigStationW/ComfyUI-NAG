@@ -24,6 +24,9 @@ class NAGNextDiT(NextDiT):
         apply_nag = check_nag_activation(transformer_options, nag_sigma_end)
 
         modules_patched = list()
+        
+        # Capture original batch size for post-processing restoration
+        original_batch_size = x.shape[0]
 
         if apply_nag:
             # 1. Calculate Image Token Count for the Attention layer to use
@@ -32,13 +35,27 @@ class NAGNextDiT(NextDiT):
             img_token_len = (h // p) * (w // p)
 
             # 2. Prepare Inputs
+            # Merge context first (Positive + Negative/NAG)
             context = cat_context(context, nag_negative_context)
-            x = torch.cat([x, x], dim=0)
+            
+            # Calculate how many items we need to add to x to match the new context size
+            target_batch_size = context.shape[0]
+            needed_count = target_batch_size - original_batch_size
 
-            if timesteps is not None:
-                timesteps = torch.cat([timesteps, timesteps], dim=0)
-            if attention_mask is not None:
-                attention_mask = torch.cat([attention_mask, attention_mask], dim=0)
+            # Extend latents and conditions if the context is larger than input (e.g. adding Negative path)
+            if needed_count > 0:
+                # We append the necessary amount of latents from the input to match the context.
+                x_extra = x[:needed_count]
+                x = torch.cat([x, x_extra], dim=0)
+
+                if timesteps is not None:
+                    t_extra = timesteps[:needed_count]
+                    timesteps = torch.cat([timesteps, t_extra], dim=0)
+                
+                if attention_mask is not None:
+                    # attention_mask might be 2D or 3D depending on implementation, slicing dim 0 is safe
+                    m_extra = attention_mask[:needed_count]
+                    attention_mask = torch.cat([attention_mask, m_extra], dim=0)
 
             # 3. Patch Modules safely
             for name, module in self.named_modules():
@@ -73,8 +90,8 @@ class NAGNextDiT(NextDiT):
 
         # 6. Post-process Output
         if apply_nag and isinstance(output, torch.Tensor):
-            # Take only the first half (guided positive)
-            output = output[:output.shape[0] // 2]
+            # Restore original batch size (discard the extra NAG guidance outputs)
+            output = output[:original_batch_size]
 
         return output
 
