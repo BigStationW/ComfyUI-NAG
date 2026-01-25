@@ -1,6 +1,7 @@
 # ComfyUI-NAG
 
 **This branch supports Flux 2 Klein**
+[Workflow 9b](https://github.com/BigStationW/ComfyUi-TextEncodeEditAdvanced/blob/main/workflow/workflow_Flux2_Klein_9b_clip_text_encode_NAG.json) - [Workflow 4b](https://github.com/BigStationW/ComfyUi-TextEncodeEditAdvanced/blob/main/workflow/workflow_Flux2_Klein_4b_clip_text_encode_NAG.json)
 
 ## Installation
 
