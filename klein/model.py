@@ -222,25 +222,7 @@ class NAGKlein(Flux):
         if origin_bsz > 0:
             x = x[:-origin_bsz]
         x = x[:, txt.shape[1]:, ...]
-        
-        print("=" * 80)
-        print("FINAL OUTPUT DEBUG")
-        print("=" * 80)
-        print(f"x shape before final_layer: {x.shape}")
-        print(f"x stats: min={x.min().item():.6f}, max={x.max().item():.6f}, mean={x.mean().item():.6f}")
-        print(f"vec_orig shape: {vec_orig.shape if hasattr(vec_orig, 'shape') else 'N/A'}")
-        
         x = self.final_layer(x, vec_orig[:-origin_bsz] if origin_bsz > 0 else vec_orig)
-        
-        print(f"x shape after final_layer: {x.shape}")
-        print(f"x stats: min={x.min().item():.6f}, max={x.max().item():.6f}, mean={x.mean().item():.6f}")
-        print(f"x has_nan: {torch.isnan(x).any().item()}, has_inf: {torch.isinf(x).any().item()}")
-        
-        # Check if output is essentially zero
-        if x.abs().max() < 1e-6:
-            print("WARNING: Final output is essentially zero!")
-        
-        print("=" * 80)
         
         return x
     
