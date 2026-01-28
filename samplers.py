@@ -87,6 +87,7 @@ class NAGCFGGuider(CFGGuider):
         self.nag_alpha = 0.25
         self.nag_sigma_end = 0.
         self.batch_size = 1
+        self.switcher = None  # Store switcher reference for cleanup
 
     def set_conds(self, positive, negative=None):
         self.inner_set_conds(
@@ -104,6 +105,20 @@ class NAGCFGGuider(CFGGuider):
 
     def __call__(self, *args, **kwargs):
         return self.predict_noise(*args, **kwargs)
+    
+    def cleanup_nag(self):
+        """Ensure NAG modifications are cleaned up"""
+        if self.switcher is not None:
+            try:
+                self.switcher.set_origin()
+            except Exception as e:
+                print(f"Warning: Error during NAG cleanup: {e}")
+            finally:
+                self.switcher = None
+
+    def __del__(self):
+        """Cleanup when the guider is garbage collected"""
+        self.cleanup_nag()
 
     def inner_sample(self, noise, latent_image, device, sampler, sigmas, denoise_mask, callback, disable_pbar, seed, latent_shapes=None, **kwargs):
         if latent_image is not None and torch.count_nonzero(latent_image) > 0: #Don't shift the empty latent image.
@@ -181,12 +196,16 @@ class NAGCFGGuider(CFGGuider):
             self.nag_negative_cond[0][0] = self.nag_negative_cond[0][0].expand(self.batch_size, -1, -1)
             if self.nag_negative_cond[0][1].get("pooled_output", None) is not None:
                 self.nag_negative_cond[0][1]["pooled_output"] = self.nag_negative_cond[0][1]["pooled_output"].expand(self.batch_size, -1)
-            switcher = switcher_cls(
+            
+            # Clean up any existing switcher before creating new one
+            self.cleanup_nag()
+            
+            self.switcher = switcher_cls(
                 model,
                 self.nag_negative_cond,
                 self.nag_scale, self.nag_tau, self.nag_alpha, self.nag_sigma_end,
             )
-            switcher.set_nag()
+            self.switcher.set_nag()
 
         try:
             orig_model_options = self.model_options
@@ -218,9 +237,10 @@ class NAGCFGGuider(CFGGuider):
             self.model_options = orig_model_options
             self.model_patcher.hook_mode = orig_hook_mode
             self.model_patcher.restore_hook_patches()
-
-        if apply_guidance:
-            switcher.set_origin()
+            
+            # Always cleanup NAG modifications
+            if apply_guidance:
+                self.cleanup_nag()
 
         del self.conds
         del self.nag_negative_cond
@@ -278,4 +298,3 @@ class KSamplerWithNAG(KSampler):
             latent_shapes=latent_shapes,
             **kwargs,
         )
-
