@@ -206,47 +206,6 @@
       "widgets_values": []
     },
     {
-      "id": 31,
-      "type": "BasicScheduler",
-      "pos": [
-        1488.5775146484375,
-        2288.0078125
-      ],
-      "size": [
-        270,
-        106
-      ],
-      "flags": {},
-      "order": 9,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 474
-        }
-      ],
-      "outputs": [
-        {
-          "name": "SIGMAS",
-          "type": "SIGMAS",
-          "links": [
-            60
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.3.75",
-        "Node name for S&R": "BasicScheduler"
-      },
-      "widgets_values": [
-        "normal",
-        30,
-        1
-      ]
-    },
-    {
       "id": 8,
       "type": "EmptyLatentImage",
       "pos": [
@@ -498,39 +457,6 @@
       ]
     },
     {
-      "id": 230,
-      "type": "VAELoader",
-      "pos": [
-        343.10806946469586,
-        2024.1746469832722
-      ],
-      "size": [
-        315,
-        58
-      ],
-      "flags": {},
-      "order": 4,
-      "mode": 0,
-      "inputs": [],
-      "outputs": [
-        {
-          "name": "VAE",
-          "type": "VAE",
-          "links": [
-            465
-          ]
-        }
-      ],
-      "properties": {
-        "cnr_id": "comfy-core",
-        "ver": "0.5.0",
-        "Node name for S&R": "VAELoader"
-      },
-      "widgets_values": [
-        "z_image_turbo_vae.safetensors"
-      ]
-    },
-    {
       "id": 227,
       "type": "CLIPLoader",
       "pos": [
@@ -542,7 +468,7 @@
         106
       ],
       "flags": {},
-      "order": 5,
+      "order": 4,
       "mode": 0,
       "inputs": [],
       "outputs": [
@@ -564,6 +490,80 @@
         "qwen_3_4b.safetensors",
         "lumina2",
         "default"
+      ]
+    },
+    {
+      "id": 31,
+      "type": "BasicScheduler",
+      "pos": [
+        1488.5775146484375,
+        2288.0078125
+      ],
+      "size": [
+        270,
+        106
+      ],
+      "flags": {},
+      "order": 9,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 474
+        }
+      ],
+      "outputs": [
+        {
+          "name": "SIGMAS",
+          "type": "SIGMAS",
+          "links": [
+            60
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.3.75",
+        "Node name for S&R": "BasicScheduler"
+      },
+      "widgets_values": [
+        "simple",
+        30,
+        1
+      ]
+    },
+    {
+      "id": 230,
+      "type": "VAELoader",
+      "pos": [
+        343.10806946469586,
+        2024.1746469832722
+      ],
+      "size": [
+        315,
+        58
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "VAE",
+          "type": "VAE",
+          "links": [
+            465
+          ]
+        }
+      ],
+      "properties": {
+        "cnr_id": "comfy-core",
+        "ver": "0.5.0",
+        "Node name for S&R": "VAELoader"
+      },
+      "widgets_values": [
+        "z_image_vae.safetensors"
       ]
     }
   ],
@@ -701,10 +701,10 @@
   "config": {},
   "extra": {
     "ds": {
-      "scale": 0.4177248169415657,
+      "scale": 0.4594972986357223,
       "offset": [
-        -84.71492939378027,
-        -1032.2346374185202
+        -125.98622944002724,
+        -1196.436345850637
       ]
     },
     "frontendVersion": "1.37.11",
