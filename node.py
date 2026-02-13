@@ -275,7 +275,7 @@ class SamplerCustomWithNAG:
 
         disable_pbar = not comfy.utils.PROGRESS_BAR_ENABLED
         samples = sample_custom_with_nag(
-            model, noise, cfg, nag_scale, nag_tau, nag_alpha, nag_sigma_end,
+            model, noise, cfg, nag_scale, nag_tau, nag_alpha, 14.7, nag_sigma_end,
             sampler, sigmas, positive, negative, nag_negative,
             latent_image,
             noise_mask=noise_mask, callback=callback, disable_pbar=disable_pbar, seed=noise_seed,
