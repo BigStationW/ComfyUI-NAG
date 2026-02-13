@@ -26,7 +26,7 @@ def common_ksampler_with_nag(model, seed, steps, cfg, nag_scale, nag_tau, nag_al
     callback = latent_preview.prepare_callback(model, steps)
     disable_pbar = not comfy.utils.PROGRESS_BAR_ENABLED
     samples = sample_with_nag(
-        model, noise, steps, cfg, nag_scale, nag_tau, nag_alpha, nag_sigma_end, sampler_name, scheduler, positive,
+        model, noise, steps, cfg, nag_scale, nag_tau, nag_alpha, 14.7, nag_sigma_end, sampler_name, scheduler, positive,
         negative, nag_negative, latent_image,
         denoise=denoise, disable_noise=disable_noise, start_step=start_step, last_step=last_step,
         force_full_denoise=force_full_denoise, noise_mask=noise_mask, callback=callback, disable_pbar=disable_pbar,
@@ -73,7 +73,7 @@ class NAGGuider:
         guider = samplers_NAGCFGGuider(model)
         guider.set_conds(conditioning)
         guider.set_batch_size(batch_size)
-        guider.set_nag(nag_negative, nag_scale, nag_tau, nag_alpha, nag_sigma_end)
+        guider.set_nag(nag_negative, nag_scale, nag_tau, nag_alpha, 14.7, nag_sigma_end)
         return (guider,)
 
 
@@ -118,7 +118,7 @@ class NAGCFGGuider:
         guider.set_conds(positive, negative)
         guider.set_cfg(cfg)
         guider.set_batch_size(batch_size)
-        guider.set_nag(nag_negative, nag_scale, nag_tau, nag_alpha, nag_sigma_end)
+        guider.set_nag(nag_negative, nag_scale, nag_tau, nag_alpha, 14.7, nag_sigma_end)
         return (guider,)
 
 
@@ -303,7 +303,7 @@ class NAGCFGGuiderAdvanced:
                 "nag_scale": ("FLOAT", {"default": 5.0, "min": 0.0, "max": 100.0, "step": 0.1, "round": 0.01}),
                 "nag_tau": ("FLOAT", {"default": 2.5, "min": 1.0, "max": 10.0, "step": 0.1, "round": 0.01}),
                 "nag_alpha": ("FLOAT", {"default": 0.25, "min": 0.0, "max": 1.0, "step": 0.01, "round": 0.01}),
-                "nag_sigma_start": ("FLOAT", {"default": 14.6, "min": 0.0, "max": 100.0, "step": 0.01, "round": 0.01}),
+                "nag_sigma_start": ("FLOAT", {"default": 14.7, "min": 0.0, "max": 20.0, "step": 0.01, "round": 0.01}),
                 "nag_sigma_end": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 20.0, "step": 0.01, "round": 0.01}),
                 "latent_image": ("LATENT",),
                 "display_logs": ("BOOLEAN", {"default": False}),
