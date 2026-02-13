@@ -321,9 +321,10 @@ class NAGHiDreamImageTransformer2DModel(HiDreamImageTransformer2DModel):
             nag_negative_y=None,
             nag_negative_context=None,
             nag_negative_encoder_hidden_states_llama=None,
+            nag_sigma_start=14.6,
             nag_sigma_end=0.,
     ):
-        apply_nag = check_nag_activation(transformer_options, nag_sigma_end)
+        apply_nag = check_nag_activation(transformer_options, nag_sigma_start, nag_sigma_end)
         if apply_nag:
             y = torch.cat((y, nag_negative_y.to(y)), dim=0)
             context = cat_context(context, nag_negative_context)
@@ -377,6 +378,7 @@ class NAGHiDreamImageTransformer2DModelSwitch(NAGSwitch):
                 nag_negative_context=self.nag_negative_cond[0][0],
                 nag_negative_y=self.nag_negative_cond[0][1]["pooled_output"],
                 nag_negative_encoder_hidden_states_llama=self.nag_negative_cond[0][1]["conditioning_llama3"],
+                nag_sigma_start=self.nag_sigma_start,
                 nag_sigma_end=self.nag_sigma_end,
             ),
             self.model

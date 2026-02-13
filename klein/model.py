@@ -238,6 +238,7 @@ class NAGKlein(Flux):
             transformer_options={},
             nag_negative_context=None,
             nag_negative_y=None,
+            nag_sigma_start=14.6,
             nag_sigma_end=0.,
             **kwargs,
     ):
@@ -286,7 +287,7 @@ class NAGKlein(Flux):
                 img = torch.cat([img, kontext], dim=1)
                 img_ids = torch.cat([img_ids, kontext_ids], dim=1)
 
-        apply_nag = check_nag_activation(transformer_options, nag_sigma_end)
+        apply_nag = check_nag_activation(transformer_options, nag_sigma_start, nag_sigma_end)
         
         if apply_nag and nag_negative_context is not None:
             origin_context_len = context.shape[1]
@@ -418,6 +419,7 @@ class NAGKleinSwitch(NAGSwitch):
                 nag_negative_context=self.nag_negative_cond[0][0],
                 nag_negative_y=self.nag_negative_cond[0][1].get("pooled_output") 
                     if self.nag_negative_cond[0][1].get("pooled_output") is not None else None,
+                nag_sigma_start=self.nag_sigma_start,
                 nag_sigma_end=self.nag_sigma_end,
             ),
             self.model,

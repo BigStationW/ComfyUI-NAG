@@ -17,11 +17,12 @@ class NAGNextDiT(NextDiT):
         num_tokens,
         attention_mask=None,
         nag_negative_context=None,
+        nag_sigma_start=14.6,
         nag_sigma_end=0.,
         **kwargs,
     ):
         transformer_options = kwargs.get("transformer_options", {})
-        apply_nag = check_nag_activation(transformer_options, nag_sigma_end)
+        apply_nag = check_nag_activation(transformer_options, nag_sigma_start, nag_sigma_end)
 
         modules_patched = list()
         
@@ -117,6 +118,7 @@ class NAGNextDiTSwitch(NAGSwitch):
                 model_self,
                 *args,
                 nag_negative_context=self._nag_negative_context,
+                nag_sigma_start=self.nag_sigma_start,
                 nag_sigma_end=self.nag_sigma_end,
                 **kwargs
             )

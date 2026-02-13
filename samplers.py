@@ -51,7 +51,7 @@ def sample_with_nag(
         noise,
         positive, negative, nag_negative,
         cfg,
-        nag_scale, nag_tau, nag_alpha, nag_sigma_end,
+        nag_scale, nag_tau, nag_alpha, nag_sigma_start, nag_sigma_end,
         device,
         sampler,
         sigmas,
@@ -63,7 +63,7 @@ def sample_with_nag(
     guider.set_conds(positive, negative)
     guider.set_cfg(cfg)
     guider.set_batch_size(latent_image.shape[0])
-    guider.set_nag(nag_negative, nag_scale, nag_tau, nag_alpha, nag_sigma_end)
+    guider.set_nag(nag_negative, nag_scale, nag_tau, nag_alpha, nag_sigma_start, nag_sigma_end)
     return guider.sample(
         noise,
         latent_image,
@@ -85,9 +85,13 @@ class NAGCFGGuider(CFGGuider):
         self.nag_scale = 5.0
         self.nag_tau = 3.5
         self.nag_alpha = 0.25
+        self.nag_sigma_start = 14.6
         self.nag_sigma_end = 0.
         self.batch_size = 1
         self.switcher = None  # Store switcher reference for cleanup
+        self.display_logs = False
+        self.current_step = 0
+        self.total_steps = 0
 
     def set_conds(self, positive, negative=None):
         self.inner_set_conds(
@@ -96,12 +100,16 @@ class NAGCFGGuider(CFGGuider):
     def set_batch_size(self, batch_size):
         self.batch_size = batch_size
 
-    def set_nag(self, nag_negative_cond, nag_scale, nag_tau, nag_alpha, nag_sigma_end):
+    def set_nag(self, nag_negative_cond, nag_scale, nag_tau, nag_alpha, nag_sigma_start, nag_sigma_end):
         self.origin_nag_negative_cond = nag_negative_cond
         self.nag_scale = nag_scale
         self.nag_tau = nag_tau
         self.nag_alpha = nag_alpha
+        self.nag_sigma_start = nag_sigma_start
         self.nag_sigma_end = nag_sigma_end
+
+    def set_display_logs(self, display_logs):
+        self.display_logs = display_logs
 
     def __call__(self, *args, **kwargs):
         return self.predict_noise(*args, **kwargs)
@@ -157,6 +165,10 @@ class NAGCFGGuider(CFGGuider):
         preprocess_conds_hooks(self.conds)
 
         apply_guidance = self.nag_scale > 1.
+        
+        # Initialize step tracking for logging
+        self.total_steps = len(sigmas) - 1
+        self.current_step = 0
 
         self.nag_negative_cond = None
         if apply_guidance:
@@ -203,9 +215,28 @@ class NAGCFGGuider(CFGGuider):
             self.switcher = switcher_cls(
                 model,
                 self.nag_negative_cond,
-                self.nag_scale, self.nag_tau, self.nag_alpha, self.nag_sigma_end,
+                self.nag_scale, self.nag_tau, self.nag_alpha, self.nag_sigma_start, self.nag_sigma_end,
             )
             self.switcher.set_nag()
+
+        # Wrap the callback to add logging
+        original_callback = callback
+        if self.display_logs and apply_guidance:
+            def logging_callback(step, x0, x, total_steps):
+                self.current_step = step
+                current_sigma = sigmas[step].item() if step < len(sigmas) else 0.0
+                
+                # Check if NAG is activated based on sigma range
+                nag_activated = (current_sigma >= self.nag_sigma_end and current_sigma <= self.nag_sigma_start)
+                
+                if nag_activated:
+                    print(f"[NAG] Step {step + 1}/{self.total_steps}, sigma: {current_sigma:.4f} (range: [{self.nag_sigma_end:.2f}, {self.nag_sigma_start:.2f}]) - ACTIVATED")
+                
+                # Call the original callback if it exists
+                if original_callback is not None:
+                    original_callback(step, x0, x, total_steps)
+            
+            callback = logging_callback
 
         try:
             orig_model_options = self.model_options
@@ -253,7 +284,7 @@ class KSamplerWithNAG(KSampler):
             noise,
             positive, negative, nag_negative,
             cfg,
-            nag_scale, nag_tau, nag_alpha, nag_sigma_end,
+            nag_scale, nag_tau, nag_alpha, nag_sigma_start, nag_sigma_end,
             latent_image=None,
             start_step=None, last_step=None, force_full_denoise=False,
             denoise_mask=None,
@@ -285,7 +316,7 @@ class KSamplerWithNAG(KSampler):
             noise,
             positive, negative, nag_negative,
             cfg,
-            nag_scale, nag_tau, nag_alpha, nag_sigma_end,
+            nag_scale, nag_tau, nag_alpha, nag_sigma_start, nag_sigma_end,
             self.device,
             sampler,
             sigmas,

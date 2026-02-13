@@ -60,8 +60,17 @@ def cat_context(context, nag_negative_context, trim_context=False, dim=1):
     return torch.cat([context, nag_negative_context], dim=0)
 
 
-def check_nag_activation(transformer_options, nag_sigma_end):
-    apply_nag = torch.all(transformer_options["sigmas"] >= nag_sigma_end)
+def check_nag_activation(transformer_options, nag_sigma_start, nag_sigma_end):
+    """
+    Check if NAG should be activated based on current sigma value.
+    NAG is active when: nag_sigma_end <= current_sigma <= nag_sigma_start
+    """
+    sigmas = transformer_options.get("sigmas")
+    if sigmas is None:
+        return False
+    
+    # Check if all sigmas in the current batch are within the NAG activation range
+    apply_nag = torch.all((sigmas >= nag_sigma_end) & (sigmas <= nag_sigma_start))
     positive_batch = 0 in transformer_options["cond_or_uncond"]
     return apply_nag and positive_batch
 
@@ -86,13 +95,14 @@ class NAGSwitch:
         self,
         model: torch.nn.Module,
         nag_negative_cond,
-        nag_scale, nag_tau, nag_alpha, nag_sigma_end,
+        nag_scale, nag_tau, nag_alpha, nag_sigma_start, nag_sigma_end,
     ):
         self.model = model
         self.nag_negative_cond = nag_negative_cond
         self.nag_scale = nag_scale
         self.nag_tau = nag_tau
         self.nag_alpha = nag_alpha
+        self.nag_sigma_start = nag_sigma_start
         self.nag_sigma_end = nag_sigma_end
         self.origin_forward = model.forward
 

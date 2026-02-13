@@ -471,6 +471,7 @@ class NAGFlux(Flux):
 
             nag_negative_context=None,
             nag_negative_y=None,
+            nag_sigma_start=14.6,
             nag_sigma_end=0.,
 
             **kwargs,
@@ -499,7 +500,7 @@ class NAGFlux(Flux):
                 h = max(h, ref.shape[-2] + h_offset)
                 w = max(w, ref.shape[-1] + w_offset)
 
-        apply_nag = check_nag_activation(transformer_options, nag_sigma_end)
+        apply_nag = check_nag_activation(transformer_options, nag_sigma_start, nag_sigma_end)
         if apply_nag:
             origin_context_len = context.shape[1]
             nag_bsz, nag_negative_context_len = nag_negative_context.shape[:2]
@@ -601,6 +602,7 @@ class NAGFluxSwitch(NAGSwitch):
                 NAGFlux.forward,
                 nag_negative_context=self.nag_negative_cond[0][0],
                 nag_negative_y=self.nag_negative_cond[0][1]["pooled_output"],
+                nag_sigma_start=self.nag_sigma_start,
                 nag_sigma_end=self.nag_sigma_end,
             ),
             self.model,
