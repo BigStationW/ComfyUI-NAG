@@ -321,7 +321,7 @@ class NAGHiDreamImageTransformer2DModel(HiDreamImageTransformer2DModel):
             nag_negative_y=None,
             nag_negative_context=None,
             nag_negative_encoder_hidden_states_llama=None,
-            nag_sigma_start=14.6,
+            nag_sigma_start=14.7,
             nag_sigma_end=0.,
     ):
         apply_nag = check_nag_activation(transformer_options, nag_sigma_start, nag_sigma_end)

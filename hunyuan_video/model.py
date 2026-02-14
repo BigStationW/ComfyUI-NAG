@@ -634,7 +634,7 @@ class NAGHunyuanVideo(HunyuanVideo):
 
             nag_negative_context=None,
             nag_negative_y=None,
-            nag_sigma_start=14.6,
+            nag_sigma_start=14.7,
             nag_sigma_end=0.,
 
             **kwargs,

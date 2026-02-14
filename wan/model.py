@@ -359,7 +359,7 @@ class NAGWanModel(WanModel):
             transformer_options={},
 
             nag_negative_context=None,
-            nag_sigma_start=14.6,
+            nag_sigma_start=14.7,
             nag_sigma_end=0.,
 
             **kwargs,
@@ -669,7 +669,7 @@ class NAGVaceWanModel(VaceWanModel):
             transformer_options={},
 
             nag_negative_context=None,
-            nag_sigma_start=14.6,
+            nag_sigma_start=14.7,
             nag_sigma_end=0.,
 
             **kwargs,
