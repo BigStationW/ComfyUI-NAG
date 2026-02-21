@@ -104,7 +104,7 @@ class NAGKleinDoubleStreamBlock:
             img_v_neg = None
 
         # ===== Run attention for positive path =====
-        if self.flipped_img_txt:
+        if getattr(self, 'flipped_img_txt', False):
             q_pos = torch.cat((img_q, txt_q_positive), dim=2)
             k_pos = torch.cat((img_k, txt_k_positive), dim=2)
             v_pos = torch.cat((img_v, txt_v_positive), dim=2)
@@ -120,7 +120,7 @@ class NAGKleinDoubleStreamBlock:
 
         # ===== Run attention for negative path (if exists) =====
         if origin_bsz > 0 and txt_q_negative is not None:
-            if self.flipped_img_txt:
+            if getattr(self, 'flipped_img_txt', False):
                 q_neg = torch.cat((img_q_neg, txt_q_negative), dim=2)
                 k_neg = torch.cat((img_k_neg, txt_k_negative), dim=2)
                 v_neg = torch.cat((img_v_neg, txt_v_negative), dim=2)
@@ -141,7 +141,7 @@ class NAGKleinDoubleStreamBlock:
         del img_q, img_k, img_v, txt_q, txt_k, txt_v
 
         # Split attention outputs
-        if self.flipped_img_txt:
+        if getattr(self, 'flipped_img_txt', False):
             img_attn_pos = attn_pos[:, :img.shape[1]]
             txt_attn_pos = attn_pos[:, img.shape[1]:]
             if attn_neg is not None:
