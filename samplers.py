@@ -26,6 +26,8 @@ import comfy.sampler_helpers
 import comfy.model_patcher
 import comfy.patcher_extension
 import comfy.hooks
+import comfy.utils
+import comfy.nested_tensor
 from comfy.ldm.flux.model import Flux
 from comfy.ldm.chroma.model import Chroma
 from comfy.ldm.modules.diffusionmodules.openaimodel import UNetModel
@@ -134,7 +136,7 @@ class NAGCFGGuider(CFGGuider):
         if latent_image is not None and torch.count_nonzero(latent_image) > 0: #Don't shift the empty latent image.
             latent_image = self.inner_model.process_latent_in(latent_image)
 
-        self.conds = process_conds(self.inner_model, noise, self.conds, device, latent_image, denoise_mask, seed)
+        self.conds = process_conds(self.inner_model, noise, self.conds, device, latent_image, denoise_mask, seed, latent_shapes=latent_shapes)
 
         extra_model_options = comfy.model_patcher.create_model_options_clone(self.model_options)
         extra_model_options.setdefault("transformer_options", {})["sample_sigmas"] = sigmas
@@ -160,6 +162,34 @@ class NAGCFGGuider(CFGGuider):
     def sample(self, noise, latent_image, sampler, sigmas, denoise_mask=None, callback=None, disable_pbar=False, seed=None, latent_shapes=None, **kwargs):
         if sigmas.shape[-1] == 0:
             return latent_image
+
+        # Mirror comfy.samplers.CFGGuider.sample: pack nested latents and resize the
+        # denoise/noise mask to latent dimensions. Without this, a latent noise mask
+        # stays at image resolution and fails the inpaint blend (x * denoise_mask).
+        if latent_image.is_nested:
+            latent_image, latent_shapes = comfy.utils.pack_latents(latent_image.unbind())
+            noise, _ = comfy.utils.pack_latents(noise.unbind())
+        else:
+            latent_shapes = [latent_image.shape]
+
+        if denoise_mask is not None:
+            if denoise_mask.is_nested:
+                denoise_masks = denoise_mask.unbind()
+                denoise_masks = denoise_masks[:len(latent_shapes)]
+            else:
+                denoise_masks = [denoise_mask]
+
+            for i in range(len(denoise_masks), len(latent_shapes)):
+                denoise_masks.append(torch.ones(latent_shapes[i]))
+
+            for i in range(len(denoise_masks)):
+                denoise_masks[i] = comfy.sampler_helpers.prepare_mask(denoise_masks[i], latent_shapes[i], self.model_patcher.load_device)
+
+            if len(denoise_masks) > 1:
+                denoise_mask, _ = comfy.utils.pack_latents(denoise_masks)
+            else:
+                denoise_mask = denoise_masks[0]
+            denoise_mask = denoise_mask.float()
 
         self.conds = {}
         for k in self.original_conds:
@@ -288,6 +318,9 @@ class NAGCFGGuider(CFGGuider):
 
         del self.conds
         del self.nag_negative_cond
+
+        if len(latent_shapes) > 1:
+            output = comfy.nested_tensor.NestedTensor(comfy.utils.unpack_latents(output, latent_shapes))
         return output
 
 
