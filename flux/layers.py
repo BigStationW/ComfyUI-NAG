@@ -66,7 +66,7 @@ class NAGDoubleStreamBlock(DoubleStreamBlock):
         img_k_negative = img_k[-origin_bsz:]
         img_v_negative = img_v[-origin_bsz:]
 
-        if self.flipped_img_txt:
+        if getattr(self, "flipped_img_txt", True):
             # run actual attention
             attn_negative = attention(
                 torch.cat((img_q_negative, txt_q_negative), dim=2),

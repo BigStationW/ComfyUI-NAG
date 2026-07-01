@@ -615,7 +615,7 @@ class NAGFlux(Flux):
             txt_ids = torch.zeros((bs, context.shape[1], 3), device=x.device, dtype=x.dtype)
             # Call base Flux.forward_orig directly to avoid issues if self.forward_orig was left in NAG state
             out = Flux.forward_orig(
-                self, img, img_ids, context, txt_ids, timestep, y, guidance, control, transformer_options,
+                self, img, img_ids, context, txt_ids, timestep, y, guidance, control, None, transformer_options,
                 attn_mask=kwargs.get("attention_mask", None),
             )
 
