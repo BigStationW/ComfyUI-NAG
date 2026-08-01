@@ -161,6 +161,15 @@ class NAGCFGGuider(CFGGuider):
         if sigmas.shape[-1] == 0:
             return latent_image
 
+        # ComfyUI core moved denoise-mask preparation from CFGGuider.outer_sample into
+        # CFGGuider.sample (commit 809ce68), which this override predates, so the mask
+        # must be prepared here or masked sampling crashes on a cpu/cuda device mismatch.
+        # [:, :1] keeps the mask single-channel — the form that re-prepares
+        # value-identically on older cores that still prepare it in outer_sample.
+        if denoise_mask is not None:
+            denoise_mask = comfy.sampler_helpers.prepare_mask(denoise_mask, latent_image.shape, self.model_patcher.load_device)
+            denoise_mask = denoise_mask[:, :1].float()
+
         self.conds = {}
         for k in self.original_conds:
             self.conds[k] = list(map(lambda a: a.copy(), self.original_conds[k]))
